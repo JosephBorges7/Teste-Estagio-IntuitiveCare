@@ -1,0 +1,11 @@
+# Ambiente virtual e cache
+.venv/
+__pycache__/
+*.pyc
+
+# Pastas de dados da Etapa 1
+dados_brutos/
+dados_extraidos/
+
+# Pasta de saída 
+saida/
