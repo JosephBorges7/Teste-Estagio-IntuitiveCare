@@ -66,8 +66,6 @@ Execute:
 python api.py
 ```
 
-API Documentation: Acesse http://127.0.0.1:8000/docs para visualizar o Swagger.
-
 Interface: Abra o arquivo index.html em seu navegador para visualizar o relatório reativo (eu uso a extensão do Live Server por ser mais prático e rápido, você encontra ela facilmente na aba de extensões do VScode).
 
 ---
