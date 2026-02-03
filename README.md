@@ -35,14 +35,15 @@ source .venv/Scripts/activate
 source .venv/bin/activate
 
 # Instalar dependências principais
-pip install pandas requests beautifulsoup4 sqlalchemy psycopg2-binary
+pip install pandas requests beautifulsoup4 sqlalchemy psycopg2-binary fastapi uvicorn
 ```
 
 ---
 
 #### 2. Configuração do Banco de Dados
 
-- Crie um banco de dados PostgreSQL chamado `intuitive_db` (dentro do arquivo de importacao.py, altere o campo com a senha do seu Postgres).
+- Crie um banco de dados PostgreSQL chamado `intuitive_db`.
+- Altere a constante DB_URL no arquivo importacao.py e api.py com suas credenciais.
 - Execute o script `schema.sql` para criar tabelas, chaves primárias, chaves estrangeiras e índices.
 
 ---
@@ -53,15 +54,21 @@ pip install pandas requests beautifulsoup4 sqlalchemy psycopg2-binary
 - **Tratamento:** `python transformacao.py` (Limpeza e padronização inicial).
 - **Enriquecimento:** `python enriquecimento.py` (Cruzamento de dados entre operadoras e despesas).
 - **Inteligência:** `python agregacao.py` (Geração do arquivo de KPIs estatísticos).
+- **Carga (Load):** `python importacao.py` (Persistência no PostgreSQL com tratamento de encoding e limpeza via TRUNCATE CASCADE).
 
 ---
 
-#### 4. Carga de Dados (Load)
+#### 4. Disponibilização e Visualização
 
 Execute:
 ```bash
-python importacao.py
+# Iniciar a API
+python api.py
 ```
+
+API Documentation: Acesse http://127.0.0.1:8000/docs para visualizar o Swagger.
+
+Interface: Abra o arquivo index.html em seu navegador para visualizar o relatório reativo (eu uso a extensão do Live Server por ser mais prático e rápido, você encontra ela facilmente na aba de extensões do VScode).
 
 ---
 
@@ -90,7 +97,16 @@ Justificativa:
 #### Precisão Financeira
 Tipo de Dado: **DECIMAL(18,2)**.
 
-Justificativa: Em sistemas de back-end contábil, o uso de FLOAT é evitado devido à imprecisão binária em grandes somas. O DECIMAL garante que cálculos de bilhões de reais sejam exatos.
+**Justificativa:** Em sistemas de back-end contábil, o uso de FLOAT é evitado devido à imprecisão binária em grandes somas. O DECIMAL garante que cálculos de bilhões de reais sejam exatos.
+
+#### Arquitetura da Etapa 4 (API & Front-end)
+**Escolha:** FastAPI + Vue.js (via CDN). 
+
+**Justificativa:**
+
+**Pragmatismo:** Como o foco é Back-end, optei pelo FastAPI pela alta performance e documentação automática.
+
+**Desacoplamento:** O uso de Vue.js via CDN permitiu criar uma interface reativa e moderna para consumir a API sem a complexidade desnecessária de um ambiente de build Node.js, mantendo o projeto leve e focado na integração de dados.
 
 ### 🔍 Qualidade e Higiene de Dados (Etapa 1.3 & 3.3)
 
