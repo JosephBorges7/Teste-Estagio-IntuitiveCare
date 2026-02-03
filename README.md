@@ -18,13 +18,15 @@ Para garantir a integridade dos dados, siga rigorosamente a ordem abaixo:
 
 #### 1. Preparação do Ambiente
 
+(Dentro de um terminal do Git BASH)
+
 ```bash
 # Criar o ambiente virtual
 python -m venv .venv
 
 # Ativar o ambiente virtual
 # Windows
-.venv\Scripts\activate
+source .venv/Scripts/activate
 
 # Linux/macOS
 source .venv/bin/activate
