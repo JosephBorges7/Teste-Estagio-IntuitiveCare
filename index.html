@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Despesas - Etapa 4</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-light">
+
+    <div id="app" class="container mt-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">📊 Relatório de Despesas Agregadas</h3>
+            </div>
+            <div class="card-body">
+                
+                <div v-if="loading" class="text-center my-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p>Buscando dados na API...</p>
+                </div>
+
+                <div v-else class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Razão Social</th>
+                                <th>UF</th>
+                                <th>Total Despesas</th>
+                                <th>Média Trimestral</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in dados" :key="item.razao_social">
+                                <td>{{ item.razao_social }}</td>
+                                <td><span class="badge bg-secondary">{{ item.uf }}</span></td>
+                                <td>R$ {{ formatarMoeda(item.total_despesas) }}</td>
+                                <td>R$ {{ formatarMoeda(item.media_trimestral) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    dados: [],
+                    loading: true
+                }
+            },
+            methods: {
+                // Função simples para formatar os valores para Real
+                formatarMoeda(valor) {
+                    return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                },
+                buscarDados() {
+                    fetch('http://127.0.0.1:8000/api/agregados')
+                        .then(response => response.json())
+                        .then(json => {
+                            this.dados = json;
+                            this.loading = false;
+                        })
+                        .catch(err => {
+                            console.error("Erro ao buscar dados:", err);
+                            this.loading = false;
+                        });
+                }
+            },
+            mounted() {
+                // Quando o site abre, ele chama a API
+                this.buscarDados();
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
