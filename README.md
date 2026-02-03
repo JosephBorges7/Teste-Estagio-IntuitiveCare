@@ -21,6 +21,9 @@ Para garantir a integridade dos dados, siga rigorosamente a ordem abaixo:
 (Dentro de um terminal do Git BASH)
 
 ```bash
+# Entrar na pasta do projeto
+cd Teste-Estagio-IntuitiveCare
+
 # Criar o ambiente virtual
 python -m venv .venv
 
