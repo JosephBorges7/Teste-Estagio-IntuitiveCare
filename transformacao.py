@@ -5,18 +5,18 @@ import os
 def validar_cnpj(valor):
     """
     Verifica se o identificador é válido. 
-    Nesta etapa (2.1), aceitamos o Registro ANS (6 dígitos).
-    Na etapa 2.2, validaremos o CNPJ real (14 dígitos).
+    Nesta etapa (2.1), aceitei o Registro ANS (6 dígitos).
+    Na etapa 2.2, validei o CNPJ real (14 dígitos).
     """
     identificador = re.sub(r'\D', '', str(valor)) # Limpa tudo que não é número
     
-    # Regra para o Registro ANS (o que temos agora no consolidado)
+    # Regra para o Registro ANS 
     if len(identificador) == 6:
         return True
     
-    # Regra para o CNPJ real (o que teremos após o Join na 2.2)
+    # Regra para o CNPJ real 
     if len(identificador) == 14:
-        # Aqui você pode manter a lógica matemática de dígitos verificadores se desejar
+      
         return True 
         
     return False
@@ -35,11 +35,10 @@ def executar_transformacao():
     df = df.dropna(subset=['RazaoSocial'])
     
     # 2. Validação: Valores Positivos 
-    # Trade-off: Mantemos o valor original mas sinalizamos se é suspeito
+    # preferi manter o valor original mas sinalizei se é suspeito
     df['ValorPositivo'] = df['ValorDespesas'] > 0
 
     # 3. Validação: Identificador (CNPJ/RegistroANS) 
-    # Agora a função existe e o apply vai encontrá-la!
     df['Identificador_Valido'] = df['CNPJ'].apply(validar_cnpj)
     
     # Exibe um resumo no terminal
