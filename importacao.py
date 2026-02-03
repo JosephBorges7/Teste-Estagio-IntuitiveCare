@@ -5,8 +5,8 @@ import os
 def executar_importacao():
     print("🚀 Iniciando Carga de Dados no Banco ...")
     
-    # Configuração da conexão
-    engine = create_engine('postgresql://postgres:172834@localhost:5432/intuitive_db')
+    # Configuração da conexão (Coloque sua senha correta)
+    engine = create_engine('postgresql://postgres:SUASENHA@localhost:5432/intuitive_db')
 
     try:
         # 1. Importar Cadastro de Operadoras
