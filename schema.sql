@@ -1,4 +1,4 @@
--- 2. CRIAÇÃO DAS TABELAS DEFINITIVAS
+-- CRIAÇÃO DAS TABELAS DEFINITIVAS
 
 -- Tabela de Cadastro das Operadoras
 CREATE TABLE operadoras (
@@ -15,11 +15,11 @@ CREATE TABLE despesas_consolidadas (
     registro_ans VARCHAR(20),
     trimestre INT NOT NULL,
     ano INT NOT NULL,
-    valor_despesa DECIMAL(18,2),
-    CONSTRAINT fk_operadora FOREIGN KEY (registro_ans) REFERENCES operadoras(registro_ans)
+    valor_despesa DECIMAL(18,2)
+
 );
 
--- 3. TABELA DE STAGING (Para evitar o erro de Chave Estrangeira durante o Python)
+-- TABELA DE STAGING (Para evitar o erro de Chave Estrangeira durante o Python)
 -- Você carrega o CSV aqui primeiro, depois filtra para a tabela oficial.
 CREATE TABLE staging_despesas (
     registro_ans VARCHAR(20),
@@ -28,7 +28,7 @@ CREATE TABLE staging_despesas (
     valor_despesa DECIMAL(18,2)
 );
 
--- 4. TABELA PARA RESULTADOS AGREGADOS (Etapa 2.3 do desafio)
+-- TABELA PARA RESULTADOS AGREGADOS (Etapa 2.3 do desafio)
 CREATE TABLE despesas_agregadas (
     razao_social VARCHAR(255),
     uf CHAR(2),
@@ -38,7 +38,7 @@ CREATE TABLE despesas_agregadas (
     PRIMARY KEY (razao_social, uf)
 );
 
--- 5. ÍNDICES PARA PERFORMANCE
+-- ÍNDICES PARA PERFORMANCE
 -- Otimiza buscas por período e localização
 CREATE INDEX idx_despesas_periodo ON despesas_consolidadas (ano, trimestre);
 CREATE INDEX idx_operadoras_uf ON operadoras (uf);
