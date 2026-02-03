@@ -3,9 +3,9 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 # =========================
-# CONFIGURAÇÕES
+# CONFIGURAÇÕES (Coloque sua senha do Postgres no lugar de 'SUASENHA')
 # =========================
-DB_URL = "postgresql://postgres:172834@localhost:5432/intuitive_db"
+DB_URL = "postgresql://postgres:SUASENHA@localhost:5432/intuitive_db"
 PASTA_SAIDA = "saida"
 
 ARQUIVO_OPERADORAS = "Relatorio_cadop.csv"
