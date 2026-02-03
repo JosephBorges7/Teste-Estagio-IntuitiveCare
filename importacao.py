@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 # =========================
-# CONFIGURAÇÕES (Coloque sua senha do Postgres no lugar de 'SUASENHA')
+# CONFIGURAÇÕES (AJUSTE CONFORME SEU AMBIENTE)
 # =========================
 DB_URL = "postgresql://postgres:SUASENHA@localhost:5432/intuitive_db"
 PASTA_SAIDA = "saida"
@@ -57,7 +57,7 @@ def limpar_tabelas(engine):
 def importar_operadoras(engine):
     print("📥 Importando operadoras...")
 
-    df = pd.read_csv(ARQUIVO_OPERADORAS, sep=";", encoding="latin-1")
+    df = pd.read_csv(ARQUIVO_OPERADORAS, sep=";", encoding="utf-8-sig")
     df = normalizar_colunas(df)
 
     col_registro = (

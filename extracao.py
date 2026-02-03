@@ -56,7 +56,7 @@ def processar_e_consolidar():
 
         try:
           
-            df = pd.read_csv(caminho, sep=';', encoding='latin-1', on_bad_lines='skip')
+            df = pd.read_csv(caminho, sep=';', encoding='utf-8-sig', on_bad_lines='skip')
             
             # Filtrar apenas Despesas com Eventos/Sinistros
             filtro_despesas = df[df['DESCRICAO'].str.contains('EVENTOS|SINISTROS', case=False, na=False)]

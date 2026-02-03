@@ -18,7 +18,7 @@ def executar_enriquecimento():
     # 2. Carrega cadastro ANS (Chave: REGISTRO_OPERADORA)
     try:
         # Usamos sep=';' e latin-1 conforme padrão da ANS
-        df_cadastral = pd.read_csv(arquivo_cadastral, sep=';', encoding='latin-1')
+        df_cadastral = pd.read_csv(arquivo_cadastral, sep=';', encoding='utf-8-sig')
         df_cadastral.columns = [c.strip().upper() for c in df_cadastral.columns]
         
         # Padroniza a chave do cadastro para string com 6 dígitos
@@ -28,7 +28,7 @@ def executar_enriquecimento():
         return
 
     # 3. Executa o JOIN (Requisito 2.2)
-    # Usamos suffixes para identificar de onde veio cada coluna após o merge
+    # Uso suffixes para identificar de onde veio cada coluna após o merge
     df_final = pd.merge(
         df_despesas, 
         df_cadastral[['REGISTRO_OPERADORA', 'CNPJ', 'MODALIDADE', 'UF']], 
@@ -51,7 +51,7 @@ def executar_enriquecimento():
     df_saida['UF'] = df_final['UF']
 
     # 5. Tratamento de Inconsistências (Requisito 2.2 e Análise Crítica)
-    # Caso não encontre o CNPJ no cadastro, mantemos o ID de 6 dígitos original para não perder o dado
+    # Caso não encontre o CNPJ no cadastro, mantenho o ID de 6 dígitos original para não perder o dado
     df_saida['CNPJ'] = df_saida['CNPJ'].fillna(df_final['CNPJ_despesa'])
 
     caminho_saida = os.path.join("saida", "consolidado_enriquecido.csv")

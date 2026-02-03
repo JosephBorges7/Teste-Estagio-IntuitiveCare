@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 def executar_agregacao():
-    print("📊 Iniciando Agregação e Análise Estatística (Etapa 2.3)...")
+    print("📊 Iniciando Agregação e Análise Estatística...")
     
     caminho_input = os.path.join("saida", "consolidado_enriquecido.csv")
     if not os.path.exists(caminho_input):
@@ -13,8 +13,8 @@ def executar_agregacao():
     df = pd.read_csv(caminho_input, sep=';')
 
     # 2. Agrupamento e Cálculos (Requisito 2.3)
-    # Agrupamos por RazaoSocial e UF [cite: 80]
-    # Calculamos: Total, Média por Trimestre e Desvio Padrão [cite: 81-84]
+    # Agrupa por RazaoSocial e UF 
+    # Calcula: Total, Média por Trimestre e Desvio Padrão 
     agregado = df.groupby(['RazaoSocial', 'UF']).agg(
         TotalDespesas=('ValorDespesas', 'sum'),
         MediaTrimestral=('ValorDespesas', 'mean'),
@@ -22,11 +22,11 @@ def executar_agregacao():
     ).reset_index()
 
     # 3. Tratamento de Inconsistências Estatísticas
-    # Operadoras com apenas 1 registro terão Desvio Padrão 'NaN'. Substituímos por 0.
+    # Operadoras com apenas 1 registro terão Desvio Padrão 'NaN'. Substituí por 0.
     agregado['DesvioPadraoDespesas'] = agregado['DesvioPadraoDespesas'].fillna(0)
 
     # 4. Ordenação (Requisito 2.3)
-    # Ordenar por valor total (maior para menor) [cite: 88]
+    # Ordenar por valor total (maior para menor) 
     # Trade-off técnico: Ordenação em memória via Pandas 
     agregado = agregado.sort_values(by='TotalDespesas', ascending=False)
 
