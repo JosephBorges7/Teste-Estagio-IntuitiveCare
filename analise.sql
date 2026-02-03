@@ -18,10 +18,15 @@ valores AS (
     WHERE d.ano = 2025
     GROUP BY d.registro_ans
 )
-SELECT o.razao_social, 
-       ((v_fim - v_ini) / NULLIF(v_ini, 0)) * 100 as crescimento_percentual
+SELECT o.razao_social,
+    -- Coalesce transforma o resultado final em 0 se for nulo
+    COALESCE(
+        ((v_fim - v_ini) / NULLIF(v_ini, 0)) * 100, 
+        0
+    ) as crescimento_percentual
 FROM valores v
 JOIN operadoras o ON v.registro_ans = o.registro_ans
+WHERE v_ini IS NOT NULL AND v_fim IS NOT NULL 
 ORDER BY crescimento_percentual DESC
 LIMIT 5;
 
