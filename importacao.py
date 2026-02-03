@@ -1,79 +1,162 @@
-import pandas as pd
-from sqlalchemy import create_engine
 import os
+import pandas as pd
+from sqlalchemy import create_engine, text
 
+# =========================
+# CONFIGURAÇÕES
+# =========================
+DB_URL = "postgresql://postgres:172834@localhost:5432/intuitive_db"
+PASTA_SAIDA = "saida"
+
+ARQUIVO_OPERADORAS = "Relatorio_cadop.csv"
+ARQUIVO_DESPESAS = "consolidado_despesas.csv"
+ARQUIVO_AGREGADOS = "despesas_agregadas.csv"
+
+
+# =========================
+# FUNÇÕES AUXILIARES
+# =========================
+def criar_engine():
+    return create_engine(DB_URL)
+
+
+def normalizar_colunas(df):
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.upper()
+        .str.replace(" ", "_")
+    )
+    return df
+
+
+def converter_decimal(serie):
+    return (
+        pd.to_numeric(
+            serie.astype(str).str.replace(",", "."),
+            errors="coerce"
+        )
+        .fillna(0)
+    )
+
+
+def limpar_tabelas(engine):
+    with engine.begin() as conn:
+        print("🧹 Limpando dados antigos...")
+        conn.execute(
+            text(
+                "TRUNCATE TABLE "
+                "despesas_agregadas, despesas_consolidadas, operadoras CASCADE;"
+            )
+        )
+
+
+# =========================
+# IMPORTAÇÕES
+# =========================
+def importar_operadoras(engine):
+    print("📥 Importando operadoras...")
+
+    df = pd.read_csv(ARQUIVO_OPERADORAS, sep=";", encoding="latin-1")
+    df = normalizar_colunas(df)
+
+    col_registro = (
+        "REGISTRO_OPERADORA"
+        if "REGISTRO_OPERADORA" in df.columns
+        else "REGISTRO_ANS"
+    )
+
+    col_razao_social = (
+        "RAZAO_SOCIAL"
+        if "RAZAO_SOCIAL" in df.columns
+        else df.columns[2]
+    )
+
+    operadoras = pd.DataFrame({
+        "registro_ans": df[col_registro].astype(str).str.zfill(6),
+        "cnpj": df["CNPJ"].astype(str),
+        "razao_social": df[col_razao_social].fillna("NOME NÃO INFORMADO"),
+        "modalidade": df.get("MODALIDADE", "NÃO INFORMADA"),
+        "uf": df.get("UF", "ND")
+    })
+
+    operadoras.to_sql("operadoras", engine, if_exists="append", index=False)
+    print("   ✅ Tabela 'operadoras' populada.")
+
+
+def importar_despesas(engine):
+    print("📥 Importando despesas consolidadas...")
+
+    caminho = os.path.join(PASTA_SAIDA, ARQUIVO_DESPESAS)
+    df = pd.read_csv(caminho, sep=";", encoding="utf-8-sig")
+    df = normalizar_colunas(df)
+
+    despesas = pd.DataFrame({
+        "registro_ans": df["CNPJ"].astype(str).str.zfill(6),
+        "trimestre": pd.to_numeric(df["TRIMESTRE"], errors="coerce").fillna(0).astype(int),
+        "ano": pd.to_numeric(df["ANO"], errors="coerce").fillna(0).astype(int),
+        "valor_despesa": converter_decimal(df["VALORDESPESAS"])
+    })
+
+    despesas.to_sql(
+        "despesas_consolidadas",
+        engine,
+        if_exists="append",
+        index=False
+    )
+
+    print("   ✅ Tabela 'despesas_consolidadas' populada.")
+
+
+def importar_agregados(engine):
+    print("📥 Importando despesas agregadas...")
+
+    caminho = os.path.join(PASTA_SAIDA, ARQUIVO_AGREGADOS)
+
+    if not os.path.exists(caminho):
+        print("   ⚠️ Arquivo 'despesas_agregadas.csv' não encontrado.")
+        return
+
+    df = pd.read_csv(caminho, sep=";", encoding="utf-8-sig")
+    df = normalizar_colunas(df)
+
+    agregados = pd.DataFrame({
+        "razao_social": df["RAZAOSOCIAL"].fillna("NOME NÃO INFORMADO"),
+        "uf": df["UF"].fillna("ND"),
+        "total_despesas": converter_decimal(df["TOTALDESPESAS"]),
+        "media_trimestral": converter_decimal(df["MEDIATRIMESTRAL"]),
+        "desvio_padrao": converter_decimal(df["DESVIOPADRAODESPESAS"])
+    })
+
+    agregados.to_sql(
+        "despesas_agregadas",
+        engine,
+        if_exists="append",
+        index=False
+    )
+
+    print("   ✅ Tabela 'despesas_agregadas' populada.")
+
+
+# =========================
+# EXECUÇÃO PRINCIPAL
+# =========================
 def executar_importacao():
     print("🚀 Iniciando Carga de Dados no Banco ...")
-    
-    # Configuração da conexão (Coloque sua senha correta)
-    engine = create_engine('postgresql://postgres:SUASENHA@localhost:5432/intuitive_db')
+
+    engine = criar_engine()
 
     try:
-        # 1. Importar Cadastro de Operadoras
-        df_cad = pd.read_csv('Relatorio_cadop.csv', sep=';', encoding='latin-1')
-        df_cad.columns = [c.strip().upper() for c in df_cad.columns]
-        
-        operadoras = pd.DataFrame()
-        operadoras['registro_ans'] = df_cad['REGISTRO_OPERADORA'].astype(str).str.zfill(6)
-        operadoras['cnpj'] = df_cad['CNPJ'].astype(str)
-        operadoras['razao_social'] = df_cad['RAZAO_SOCIAL'].fillna('NOME NÃO INFORMADO')
-        operadoras['modalidade'] = df_cad['MODALIDADE']
-        operadoras['uf'] = df_cad['UF']
-        
-        operadoras.to_sql('operadoras', engine, if_exists='append', index=False)
-        print("   ✅ Tabela 'operadoras' populada.")
+        limpar_tabelas(engine)
+        importar_operadoras(engine)
+        importar_despesas(engine)
+        importar_agregados(engine)
 
-        # 2. Importar Despesas Consolidadas
-        df_desp = pd.read_csv(os.path.join('saida', 'consolidado_despesas.csv'), sep=';')
-        
-        despesas = pd.DataFrame()
-        despesas['registro_ans'] = df_desp['CNPJ'].astype(str).str.zfill(6)
-        despesas['trimestre'] = pd.to_numeric(df_desp['Trimestre'], errors='coerce').fillna(0).astype(int)
-        despesas['ano'] = pd.to_numeric(df_desp['Ano'], errors='coerce').fillna(0).astype(int)
-        despesas['valor_despesa'] = pd.to_numeric(
-            df_desp['ValorDespesas'].astype(str).str.replace(',', '.'), 
-            errors='coerce'
-        ).fillna(0)
+        print("🎉 Importação finalizada com sucesso!")
 
-        despesas.to_sql('despesas_consolidadas', engine, if_exists='append', index=False)
-        print("   ✅ Tabela 'despesas_consolidadas' populada.")
+    except Exception as erro:
+        print(f"❌ Erro durante a importação: {erro}")
 
-        # 3. Importar Dados Agregados (NOMES CORRIGIDOS)
-        caminho_agregados = os.path.join('saida', 'despesas_agregadas.csv')
-        if os.path.exists(caminho_agregados):
-            # Lendo o CSV com o separador correto ';'
-            df_agreg = pd.read_csv(caminho_agregados, sep=';')
-            
-            agregados = pd.DataFrame()
-            
-            # Mapeamento exato conforme as colunas que você enviou:
-            agregados['razao_social'] = df_agreg['RazaoSocial'].fillna('NOME NÃO INFORMADO')
-            agregados['uf'] = df_agreg['UF'].fillna('ND')
-            
-            # Tratamento numérico para evitar erros no banco de dados
-            agregados['total_despesas'] = pd.to_numeric(
-                df_agreg['TotalDespesas'].astype(str).str.replace(',', '.'), 
-                errors='coerce'
-            ).fillna(0)
-            
-            agregados['media_trimestral'] = pd.to_numeric(
-                df_agreg['MediaTrimestral'].astype(str).str.replace(',', '.'), 
-                errors='coerce'
-            ).fillna(0)
-            
-            agregados['desvio_padrao'] = pd.to_numeric(
-                df_agreg['DesvioPadraoDespesas'].astype(str).str.replace(',', '.'), 
-                errors='coerce'
-            ).fillna(0)
-
-            # Inserção no banco de dados
-            agregados.to_sql('despesas_agregadas', engine, if_exists='append', index=False)
-            print("   ✅ Tabela 'despesas_agregadas' populada com sucesso!")
-        else:
-            print("   ⚠️ Arquivo 'despesas_agregadas.csv' não encontrado na pasta 'saida'.")
-
-    except Exception as e:
-        print(f"❌ Erro durante a importação: {e}")
 
 if __name__ == "__main__":
     executar_importacao()
