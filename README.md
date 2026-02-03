@@ -37,17 +37,17 @@ pip install pandas requests beautifulsoup4 sqlalchemy psycopg2-binary
 
 #### 2. Configuração do Banco de Dados
 
-- Crie um banco de dados PostgreSQL chamado `intuitive_db`.
+- Crie um banco de dados PostgreSQL chamado `intuitive_db` (dentro do arquivo de importacao.py, altere o campo com a senha do seu Postgres).
 - Execute o script `schema.sql` para criar tabelas, chaves primárias, chaves estrangeiras e índices.
 
 ---
 
 #### 3. Execução do Pipeline ETL
 
-- **Extração:** `python main.py`
-- **Tratamento:** `python transformacao.py`
-- **Enriquecimento:** `python enriquecimento.py`
-- **Inteligência:** `python agregacao.py`
+- **Extração:** `python extracao.py` (Download e extração via Web Scraping resiliente).
+- **Tratamento:** `python transformacao.py` (Limpeza e padronização inicial).
+- **Enriquecimento:** `python enriquecimento.py` (Cruzamento de dados entre operadoras e despesas).
+- **Inteligência:** `python agregacao.py` (Geração do arquivo de KPIs estatísticos).
 
 ---
 
@@ -69,13 +69,33 @@ Execute as queries contidas em `analise.sql` no cliente SQL (ex: pgAdmin).
 ### 🧠 Decisões de Engenharia e Trade-offs
 
 #### Processamento e Memória
-Processamento incremental para evitar erros de **Out of Memory (OOM)**.
+Estratégia: Processamento Incremental por arquivos.
+
+Justificativa: Para suportar o volume massivo da ANS (centenas de milhares de linhas por trimestre), evitamos o carregamento em lote na RAM, prevenindo erros de **Stack Overflow** ou **Out of Memory**.
 
 #### Modelagem de Dados
-Uso de tabelas normalizadas com **Foreign Keys**.
+Abordagem: **Opção B (Tabelas Normalizadas)**.
+
+Justificativa:
+
+**Escalabilidade:** Reduz a redundância de dados cadastrais (Razão Social, UF) que se repetem milhões de vezes nas despesas.
+
+**Integridade:** Uso de **Foreign Keys (FK)** para garantir que nenhuma despesa seja órfã de uma operadora cadastrada.
 
 #### Precisão Financeira
-Uso de `DECIMAL(18,2)` para garantir exatidão.
+Tipo de Dado: **DECIMAL(18,2)**.
+
+Justificativa: Em sistemas de back-end contábil, o uso de FLOAT é evitado devido à imprecisão binária em grandes somas. O DECIMAL garante que cálculos de bilhões de reais sejam exatos.
+
+### 🔍 Qualidade e Higiene de Dados (Etapa 1.3 & 3.3)
+
+Para garantir a confiabilidade dos relatórios, implementei:
+
+**Regex Sanitization:** Extração de metadados diretamente dos nomes dos arquivos para evitar erros de digitação nas planilhas.
+
+**Normalização de Tipos:** Conversão automática de strings/vírgulas em formatos numéricos compatíveis com o PostgreSQL durante a importação.
+
+**Deduplicação Inteligente:** Lógica de **keep last** para manter apenas a versão mais atualizada da razão social de cada operadora.
 
 ---
 
