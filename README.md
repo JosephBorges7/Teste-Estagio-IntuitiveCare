@@ -56,13 +56,14 @@ pip install pandas requests beautifulsoup4 sqlalchemy psycopg2-binary fastapi uv
 - **Inteligência:** `python agregacao.py` (Geração do arquivo de KPIs estatísticos).
 - **Carga (Load):** `python importacao.py` (Persistência no PostgreSQL com tratamento de encoding e limpeza via TRUNCATE CASCADE).
 
+Observação: execute esses comandos no mesmo terminal do Git BASH.
+
 ---
 
 #### 4. Disponibilização e Visualização
 
 Execute:
 ```bash
-# Iniciar a API
 python api.py
 ```
 
